@@ -11,7 +11,8 @@ function parse_value(lower, upper, name)
                 break
             end
         catch
-            println("That was not a number you entered :/ Try again!")
+            type = typeof(lower)
+            println("Expected $type, but got something different. Try again!")
             value = chomp(readline())
         end
     end
@@ -50,9 +51,9 @@ function calc_inc(lat, az)
     return inc
 end
 function calc_az_given_launchsite(launchsites)
+    lat = choose_launchsite_and_get_latitude(launchsites)
+    inc = parse_value(-90.0,90.0,"inclination")
     while(true)
-        lat = choose_launchsite_and_get_latitude(launchsites)
-        inc = parse_value(-90.0,90.0,"inclination")
         if(inc<lat)
             println("The inclination must be greater than or equal to the launch latitude, otherwise there is no mathematical solution to this problem. Please try entering different values.")
         else
@@ -96,7 +97,7 @@ function latitude_or_launchsite()
     choice = parse_value(1, 2, "mode")
     if choice == 1
         own_lat = true
-    elseif option == 2
+    elseif choice == 2
         own_lat = false
     else
         throw(BoundsError(choice,"whoa, that argument was out of bounds. how did you do that?"))
@@ -133,7 +134,7 @@ struct Launch_sites
     #cosmodrome  #45.9
 end
 function start()
-    launchsites = Launch_sites([" Cape Canaveral", "Cosmodrome"],[28.5, 45.9])
+    launchsites = Launch_sites(["Cape Canaveral", "Cosmodrome"],[28.5, 45.9])
     run(`clear`) 
     println("Good day, sir! Are you mayhaps in need of some inclination calculation? We have just what you need!")
     println("Here you can either calculate your inclination, given a known launch site or latitude and an azimuth or you can calculate what Azimuth you need to archieve a desired inclination.")
