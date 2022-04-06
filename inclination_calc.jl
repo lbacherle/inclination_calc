@@ -19,7 +19,7 @@ function parse_value(lower, upper, name)
     return value
 end
 
-function given_latitude()
+function calc_inc_given_latitude()
     run(`clear`) 
     println("You chose calculating with your own latitude. Great choice, if I may say so!")
     lat = parse_value(-90.0, 90.0, "latitude")
@@ -27,7 +27,7 @@ function given_latitude()
     calc_inc(lat, az)
 end
 
-function given_launchsite(launchsites)
+function calc_inc_given_launchsite(launchsites)
     names = launchsites.names
     lats = launchsites.latitudes
     run(`clear`) 
@@ -46,16 +46,43 @@ function calc_inc(lat, az)
     println("phew, that was hard. Your inclination is going to be $inc")
     return inc
 end
+function calc_az_given_launchsite(launchsites)
 
-function choose_mode(launchsites)
+end
+function latitude_or_launchsite()
     println("Do you want to provide your own latitude or choose from a given launch site? Type 1 for latitude, 2 for launch site then press enter.")
     choice = parse_value(1, 2, "mode")
     if choice == 1
-        given_latitude()
+        own_lat = true
     elseif option == 2
-        given_launchsite(launchsites)
+        own_lat = false
     else
-        println("whoa, you managed to parse an incompatible number. how did you do that?")
+        throw(BoundsError(choice,"whoa, that argument was out of bounds. how did you do that?"))
+    end
+    return own_lat
+end
+function choose_mode(launchsites)
+    println("Do you want to calculate inclination or Azimuth? Type 1 for inclination, 2 for Azimuth")
+    choice = parse_value(1, 2, "mode")
+    #calculate inclination for given azimuth 
+    if choice == 1
+        own_lat = latitude_or_launchsite()
+        if own_lat
+            calc_inc_given_latitude()
+        else
+            calc_inc_given_launchsite(launchsites)
+        end
+    #calculate azimuth for given inclination and latitude
+    elseif choice == 2
+        own_lat = latitude_or_launchsite()
+        if own_lat
+            #calc azimuth for a given latitude
+        else
+            calc_az_given_launchsite(launchsites)
+            #calc azimuth for a given launchsite
+        end
+    else
+        throw(BoundsError(choice,"whoa, that argument was out of bounds. how did you do that?"))
     end
 end
 struct Launch_sites
@@ -65,10 +92,10 @@ struct Launch_sites
     #cosmodrome  #45.9
 end
 function start()
-    launchsites = Launch_sites([" Cape Canveral", "Cosmodrome"],[28.5, 45.9])
+    launchsites = Launch_sites([" Cape Canaveral", "Cosmodrome"],[28.5, 45.9])
     run(`clear`) 
     println("Good day, sir! Are you mayhaps in need of some inclination calculation? We have just what you need!")
-    println("Here you can either calculate your inclination, given a known launch site and an azimuth or for any other latitude of choice!")
+    println("Here you can either calculate your inclination, given a known launch site or latitude and an azimuth or you can calculate what Azimuth you need to archieve a desired inclination.")
     choose_mode(launchsites)
 end
 start()
