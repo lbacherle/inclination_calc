@@ -110,6 +110,8 @@ function calc_rotational_az(lat, inc, v)
     v_eqrot = 465.101
     az_rot = atand((v * sind(az_inertial) - v_eqrot*cosd(inc))/ (v*cosd(az_inertial)))
     println("The rotational Azimuth needed to achieve the desired inclination of $inc ° is $az_rot °")
+    diff = abs(az_inertial-az_rot)
+    println("The difference between the inertial Azimuth $az_inertial ° and the rotational Azimuth $az_rot ° is $diff °")
     return az_rot
 end
 function calc_az_given_latitude()
