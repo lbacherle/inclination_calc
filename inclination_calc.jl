@@ -1,5 +1,5 @@
 function parse_value(lower, upper, name)
-    println("Please enter your desired $name.")
+    println("Please enter your $name.")
     value = chomp(readline())
     while(true)
         try
@@ -40,6 +40,7 @@ function choose_launchsite_and_get_latitude(launchsites)
     return lat
 end
 function calc_inc_given_launchsite(launchsites)
+    run(`clear`)
     lat = choose_launchsite_and_get_latitude(launchsites)
     az = parse_value(0.0, 360.0, "azimuth")
     calc_inc(lat, az)
@@ -51,6 +52,7 @@ function calc_inc(lat, az)
     return inc
 end
 function calc_az_given_launchsite(launchsites)
+    run(`clear`)
     lat = choose_launchsite_and_get_latitude(launchsites)
     inc = parse_value(-90.0,90.0,"inclination")
     while(true)
@@ -67,7 +69,7 @@ function calc_az_given_latitude()
     lat = parse_value(-90.0, 90.0, "latitude")
     inc = parse_value(-90.0,90.0,"inclination")
     while(true)
-        if(inc<lat)
+        if inc<lat 
             println("The inclination must be greater than or equal to the launch latitude, otherwise there is no mathematical solution to this problem. Please try entering different values.")
         else
             break
@@ -93,6 +95,7 @@ function calc_az(lat, inc)
     return az
 end
 function latitude_or_launchsite()
+    run(`clear`)
     println("Do you want to provide your own latitude or choose from a given launch site? Type 1 for latitude, 2 for launch site.")
     choice = parse_value(1, 2, "mode")
     if choice == 1
@@ -105,6 +108,14 @@ function latitude_or_launchsite()
     return own_lat
 end
 function choose_mode(launchsites)
+    run(`clear`)
+    println("Do you want your calculations to take into account the rotation of the earth? To include rotation, target orbit speed must be known. Type 1 for yes, 2 for no")
+    choice = parse_value(1, 2, "mode")
+    if choice == 1
+        rot = true
+    else
+        rot = false
+    end
     println("Do you want to calculate inclination or Azimuth? Type 1 for inclination, 2 for Azimuth then press enter")
     choice = parse_value(1, 2, "mode")
     #calculate inclination for given azimuth 
