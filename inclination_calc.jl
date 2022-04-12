@@ -22,6 +22,7 @@ end
 
 function calc_inc_given_latitude()
     run(`clear`) 
+    printstyled("LAUNCHSITE CALCULATOR\n\n",bold=true, underline=true, blink=true,color=:blue)
     println("You chose calculating with your own latitude. Great choice, if I may say so!")
     lat = parse_value(-90.0, 90.0, "latitude")
     az = parse_value(0.0, 360.0, "azimuth")
@@ -32,6 +33,7 @@ function choose_launchsite_and_get_latitude(launchsites)
     names = launchsites.names
     lats = launchsites.latitudes
     run(`clear`) 
+    printstyled("LAUNCHSITE CALCULATOR\n\n",bold=true, underline=true, blink=true,color=:blue)
     println("You chose calculating with a given launchsite. Great choice, if I may say so!")
     println("Please choose your launchsite now.")
     println("You have the following choices:\n $names \n Type 1 for the first option, 2 for the second...")
@@ -41,6 +43,7 @@ function choose_launchsite_and_get_latitude(launchsites)
 end
 function calc_inc_given_launchsite(launchsites)
     run(`clear`)
+    printstyled("LAUNCHSITE CALCULATOR\n\n",bold=true, underline=true, blink=true,color=:blue)
     lat = choose_launchsite_and_get_latitude(launchsites)
     az = parse_value(0.0, 360.0, "azimuth")
     calc_inc(lat, az)
@@ -51,26 +54,9 @@ function calc_inc(lat, az)
     println("phew, that was hard. Your inclination is going to be $inc")
     return inc
 end
-function calc_az_given_launchsite(launchsites)
-    run(`clear`)
-    lat = choose_launchsite_and_get_latitude(launchsites)
-    inc = parse_value(-90.0,90.0,"inclination")
-    while(true)
-        if abs(inc)<lat
-            println("The inclination must be greater than or equal to the launch latitude, otherwise there is no mathematical solution to this problem. Please try entering different values.")
-            lat = choose_launchsite_and_get_latitude(launchsites)
-            inc = parse_value(-90.0,90.0,"inclination")
-        else
-            break
-        end
-    end
-    az = calc_az(lat, inc, true)
-    return az
-end
-
 function calc_rotational_az_given_launchsite(launchsites)
     run(`clear`)
-    print("hi")
+    printstyled("LAUNCHSITE CALCULATOR\n\n",bold=true, underline=true, blink=true,color=:blue)
     lat = choose_launchsite_and_get_latitude(launchsites)
     inc = parse_value(-90.0,90.0,"inclination")
     v = parse_value(0.0,typemax(Float32),"orbit speed")
@@ -129,6 +115,23 @@ function calc_az_given_latitude()
     az = calc_az(lat, inc,true)
     return az
 end
+function calc_az_given_launchsite(launchsites)
+    run(`clear`)
+    printstyled("LAUNCHSITE CALCULATOR\n\n",bold=true, underline=true, blink=true,color=:blue)
+    lat = choose_launchsite_and_get_latitude(launchsites)
+    inc = parse_value(-90.0,90.0,"inclination")
+    while(true)
+        if abs(inc)<lat
+            println("The inclination must be greater than or equal to the launch latitude, otherwise there is no mathematical solution to this problem. Please try entering different values.")
+            lat = choose_launchsite_and_get_latitude(launchsites)
+            inc = parse_value(-90.0,90.0,"inclination")
+        else
+            break
+        end
+    end
+    az = calc_az(lat, inc, true)
+    return az
+end
 function calc_az(lat, inc, verbose)
     if verbose
         println(".....calculating azimuth......")
@@ -153,6 +156,7 @@ function calc_az(lat, inc, verbose)
 end
 function latitude_or_launchsite()
     run(`clear`)
+    printstyled("LAUNCHSITE CALCULATOR\n",bold=true, underline=true, blink=true,color=:blue)
     println("Do you want to provide your own latitude or choose from a given launch site? Type 1 for latitude, 2 for launch site.")
     choice = parse_value(1, 2, "mode")
     if choice == 1
@@ -166,9 +170,9 @@ function latitude_or_launchsite()
 end
 
 function choose_mode(launchsites)
-    run(`clear`)
+    println("\n##########################################################################################\n")
     println("Do you want your calculations to take into account the rotation of the earth? To include rotation, target orbit speed must be known. Type 1 for yes, 2 for no")
-    choice = parse_value(1, 2, "mode")
+    choice = parse_value(1, 2, "selection")
     rot = true
     if choice == 1
         rot = true
@@ -214,9 +218,16 @@ struct Launch_sites
 end
 function start()
     launchsites = Launch_sites(["Cape Canaveral", "Cosmodrome"],[28.5, 45.9])
-    run(`clear`) 
-    println("Good day, sir! Are you mayhaps in need of some inclination calculation? We have just what you need!")
-    println("Here you can either calculate your inclination, given a known launch site or latitude and an azimuth or you can calculate what Azimuth you need to archieve a desired inclination.")
+    run(`clear`)
+    printstyled("LAUNCHSITE CALCULATOR\n\n",bold=true, underline=true, blink=true,color=:blue)
+    printstyled("Existing modes are:\n", underline=true)
+    printstyled("\t1) Calculate the needed rotational Azimuth for a given latitude and inclination\n")
+    printstyled("\t2) Calculate the needed inertial Azimuth for a given latitude and inclination\n")
+    printstyled("\t3) Calculate the resulting inclination for a given latitude and azimuth\n")
+    printstyled("Latitude can be provided by selecting out of a number of launchsites, or parsed directly\n")
+    printstyled("\nConventions:\n",bold=true, underline=true)
+    printstyled("\t-Angles must be given in degrees\n")
+    printstyled("\t-Inclination is defined from -90° to +90°, Azimuth from 0° to 360°\n")
     choose_mode(launchsites)
 end
 start()
