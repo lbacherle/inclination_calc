@@ -1,7 +1,9 @@
-###############
+#dont change, unless another mode is added
 nr_of_modes = 3
+
 #set desired precision of floating point values
 precision = 2
+
 function parse_value(lower, upper, name)
     println("Please enter your $name.")
     value = chomp(readline())
@@ -162,7 +164,7 @@ end
 function choose_mode(launchsites)
     println("\n##########################################################################################\n")
     println("Please choose your selected mode out of the $nr_of_modes modes.")
-    choice = parse_value(1, 3, "mode")
+    choice = parse_value(1, nr_of_modes, "mode")
     #calculate inclination for given azimuth 
     if choice == 3
         run(`clear`)
@@ -201,7 +203,7 @@ struct Launch_sites
     #cosmodrome  #45.9
 end
 function start()
-    launchsites = Launch_sites(["Cape Canaveral", "Cosmodrome"], [28.5, 45.9])
+    launchsites = Launch_sites(["Cape Canaveral", "Cosmodrome","Kennedy Space Center","Kourou Launch Center/Guyana Space Centre","LP Odissey Sea Launch","Kwajalein Missile Range","Satish Dhawan Space Centre","Jiu Quan Satellite Launch Center","Vandenberg Air Force Base"], [28.5, 45.9,28.5,5.2,0.0,9.0,13.9,40.6,34.4])
     run(`clear`)
     printstyled("LAUNCHSITE CALCULATOR\n\n", bold=true, underline=true, blink=true, color=:blue)
     printstyled("Existing modes are:\n", underline=true)
