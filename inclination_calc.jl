@@ -18,13 +18,25 @@ Sources:
     2) Launchsite Latitudes: 'Space Mission Engineering - The New SMAD' by Wertz, Everett and Puschell, published 2011 by Microcosm Press
 
 """
-#dont change, unless another mode is added
+"specifies the number of calculation modes that this program currently offers"
 nr_of_modes = 3
 
 "Set desired precision of floating point values in output"
 precision = 2
 
+"struct used for storing names and latitudes of launch sites"
+struct Launch_sites
+    names::Array
+    latitudes::Array
+end
 
+"""
+    parse_value(lower, upper, name)
+
+Asks user for an input value x, with lower <= x <= upper.
+
+If x is not parsable to type of 'lower' or x is out of bounds the function repeats asking for input.
+"""
 function parse_value(lower, upper, name)
     println("Please enter your $name.")
     value = chomp(readline())
@@ -47,6 +59,11 @@ function parse_value(lower, upper, name)
     return value
 end
 
+"""
+    calc_inc_given_latitude()
+
+Asks user for input values for latitude and azimuth values, calls calc_inc with the given values
+"""
 function calc_inc_given_latitude()
     lat = parse_value(-90.0, 90.0, "latitude")
     az = parse_value(0.0, 360.0, "azimuth")
@@ -221,6 +238,12 @@ function choose_mode(launchsites)
         throw(BoundsError(choice, "whoa, that argument was out of bounds. how did you do that?"))
     end
 end
+
+"""
+    start()
+
+gets called at start of program. initialises launch site struct with values, prints modes and conventions on screen and calls choose_mode()
+"""
 function start()
     launchsites = Launch_sites(["Cape Canaveral", "Cosmodrome","Kennedy Space Center","Kourou Launch Center/Guyana Space Centre","LP Odissey Sea Launch","Kwajalein Missile Range","Satish Dhawan Space Centre","Jiu Quan Satellite Launch Center","Vandenberg Air Force Base"], [28.5, 45.9,28.5,5.2,0.0,9.0,13.9,40.6,34.4])
     run(`clear`)
