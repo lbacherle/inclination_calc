@@ -1,8 +1,29 @@
+"""
+    inclination_calc.jl
+
+Simple Julia program to calculate launchsite parameters.
+
+Modes:
+    1) Calculate inertial Azimuth (disregarding Earths rotation) for a launchsite or latitude and a desired inclination
+    2) Calculate rotational Azimuth (taking into account Earth rotation) for a launchsite or latitude and a desired inclination
+    3) Calculate resulting Inclination for a launchsite or latitude and an Azimuth angle
+
+Conventions:
+    1) All angles must be given in degrees
+    2) Inclination and Latitude are defined from -90° to +90°, Azimuth from 0° to 360°
+
+Sources:
+    1) Formulas: The derivation of formulas for inertial and rotational calculations can be found under https://www.orbiterwiki.org/index.php?title=Launch_Azimuth&oldid=17141
+                 or https://ntrs.nasa.gov/api/citations/19980227091/downloads/19980227091.pdf ('Technical Note D-233, Determination of Azimuth Angle at Burnout for placing Satellite over a selected Earth position', T.H. Skopinski and K.G Johnson, NASA, 1960)
+    2) Launchsite Latitudes: 'Space Mission Engineering - The New SMAD' by Wertz, Everett and Puschell, published 2011 by Microcosm Press
+
+"""
 #dont change, unless another mode is added
 nr_of_modes = 3
 
-#set desired precision of floating point values
+"Set desired precision of floating point values in output"
 precision = 2
+
 
 function parse_value(lower, upper, name)
     println("Please enter your $name.")
@@ -48,7 +69,11 @@ function calc_inc_given_launchsite(launchsites)
     calc_inc(lat, az)
 end
 function calc_inc(lat, az)
-    inc = acosd(cosd(lat) * sind(az))
+    if az <= 180
+        inc = acosd(cosd(lat) * sind(az))
+    else 
+        inc = acosd(-cosd(lat)*sind(az))
+    end
     println("The resulting inclination is ",round(inc,digits=precision),"°")
     return inc
 end
@@ -93,7 +118,7 @@ function calc_rotational_az(lat, inc, v)
     az_rot = atand((v * sind(az_inertial) - v_eqrot * cosd(inc)) / (v * cosd(az_inertial)))
     println("The rotational Azimuth needed to achieve the desired inclination of ",round(inc,digits=precision),"° is ",round(az_rot,digits=precision),"°")
     diff = abs(az_inertial - az_rot)
-    println("The difference between the inertial Azimuth (",round(az_inertial,digits=precision),"°) and the rotational Azimuth (",round(az_rot,digits=precision),"°) is ",round(diff,digits=precision),"°")
+    println("The difference between the inertial Azimuth (",round(az_inertial,digits=precision),"°) and the rotational Azimuth (",round(az_rot,digits=precision),"°) amounts to ",round(diff,digits=precision),"°")
     return az_rot
 end
 function calc_az_given_latitude()
@@ -136,21 +161,21 @@ function calc_az(lat, inc, verbose)
         if (cosd(inc) / cosd(lat)) > 0
             az2 = 180 - asind(cosd(inc) / cosd(lat))
             if verbose
-                println("The problem has two possible solutions, the first Azimuth is $az, the second one is $az2")
+                println("The problem has two possible solutions, the first Azimuth is ", round(az,digits=precision), "° the second one is ", round(az2,digits=precision), "° ")
             end
         else
             az2 = -180 - asind(cosd(inc) / cosd(lat))
             if verbose
-                println("The problem has two possible solutions, the first Azimuth is $az, the second one is $az2")
+                println("The problem has two possible solutions, the first Azimuth is ", round(az,digits=precision), "°, the second one is ", round(az,digits=precision), "°")
             end
         end
     else
-        println("There is only one possible Azimuth that results in the given inclination, which is $az")
+        println("There is only one possible Azimuth that results in the given inclination, which is ", round(az,digits=precision), "°")
     end
     return az
 end
 function latitude_or_launchsite()
-    println("Do you want to provide your own latitude or choose from a given launch site? Type 1 for latitude, 2 for launch site.")
+    println("Select between providing a latitude and choosing from a launch site. Type 1 for latitude, 2 for launch site.")
     choice = parse_value(1, 2, "mode")
     if choice == 1
         own_lat = true
@@ -163,8 +188,8 @@ function latitude_or_launchsite()
 end
 function choose_mode(launchsites)
     println("\n##########################################################################################\n")
-    println("Please choose your selected mode out of the $nr_of_modes modes.")
-    choice = parse_value(1, nr_of_modes, "mode")
+    println("Please choose your selected mode out of the $nr_of_modes modes by entering a number between 1 and $nr_of_modes.")
+    choice = parse_value(1, nr_of_modes, "selection")
     #calculate inclination for given azimuth 
     if choice == 3
         run(`clear`)
@@ -196,16 +221,10 @@ function choose_mode(launchsites)
         throw(BoundsError(choice, "whoa, that argument was out of bounds. how did you do that?"))
     end
 end
-struct Launch_sites
-    names::Array
-    latitudes::Array
-    #cape_canaveral #28.5
-    #cosmodrome  #45.9
-end
 function start()
     launchsites = Launch_sites(["Cape Canaveral", "Cosmodrome","Kennedy Space Center","Kourou Launch Center/Guyana Space Centre","LP Odissey Sea Launch","Kwajalein Missile Range","Satish Dhawan Space Centre","Jiu Quan Satellite Launch Center","Vandenberg Air Force Base"], [28.5, 45.9,28.5,5.2,0.0,9.0,13.9,40.6,34.4])
     run(`clear`)
-    printstyled("LAUNCHSITE CALCULATOR\n\n", bold=true, underline=true, blink=true, color=:blue)
+    printstyled("LAUNCHSITE CALCULATOR\n\n", bold=true, underline=true, color=:blue)
     printstyled("Existing modes are:\n", underline=true)
     printstyled("\t1) Calculate the needed rotational Azimuth for a given latitude and inclination\n")
     printstyled("\t2) Calculate the needed inertial Azimuth for a given latitude and inclination\n")
@@ -213,7 +232,7 @@ function start()
     printstyled("Latitude can be provided by selecting out of a number of launchsites, or parsed directly\n")
     printstyled("\nConventions:\n", bold=true, underline=true)
     printstyled("\t-Angles must be given in degrees\n")
-    printstyled("\t-Inclination and Latitude is defined from -90° to +90°, Azimuth from 0° to 360°\n")
+    printstyled("\t-Inclination and Latitude are defined from -90° to +90°, Azimuth from 0° to 360°\n")
     choose_mode(launchsites)
 end
 start()
