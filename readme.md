@@ -6,7 +6,7 @@ Modes:\
 &emsp;1) Calculate inertial Azimuth (disregarding Earths rotation) for a launchsite or latitude and a desired inclination\
 &emsp;2) Calculate rotational Azimuth (taking into account Earth rotation) for a launchsite or latitude and a desired inclination\
 &emsp;3) Calculate resulting Inclination for a launchsite or latitude and an Azimuth angle\
-&emsp;4) Compare propellant mass needed for different latitudes
+&emsp;4) Compare propellant mass needed for different latitudes (assuming an eastwards launch)
 
 Conventions:\
 &emsp;1) All angles must be given in degrees\
