@@ -12,6 +12,11 @@ Conventions:\
 &emsp;1) All angles must be given in degrees\
 &emsp;2) Inclination and Latitude are defined from -90° to +90°, Azimuth from 0° to 360°
 
+Dependencies:\
+&emsp;1) The Plots package is needed to show the resulting plots. Installation can be done by typing julia into the command line to start the REPL, then typing the following:\
+&emsp;&emsp;julia> using package\
+&emsp;&emsp;julia> Pkg.add("Plots")
+
 Sources:\
 &emsp;1) Formulas: The derivation of formulas for inertial and rotational calculations can be found under https://www.orbiterwiki.org/index.php?title=Launch_Azimuth&oldid=17141
                  or https://ntrs.nasa.gov/api/citations/19980227091/downloads/19980227091.pdf ('Technical Note D-233, Determination of Azimuth Angle at Burnout for placing Satellite over a selected Earth position', T.H. Skopinski and K.G Johnson, NASA, 1960)\

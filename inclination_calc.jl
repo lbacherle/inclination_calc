@@ -12,11 +12,16 @@ Conventions:
     1) All angles must be given in degrees
     2) Inclination and Latitude are defined from -90° to +90°, Azimuth from 0° to 360°
     3) Velocities must be given in m/s
-
+    
+Dependencies:
+    1) The Plots package is needed to show the resulting plots. Installation can be done by typing julia into the console to start the REPL, then typing the following:
+        julia> using package
+        julia> Pkg.add("Plots")
 Sources:
     1) Formulas: The derivation of formulas for inertial and rotational calculations can be found under https://www.orbiterwiki.org/index.php?title=Launch_Azimuth&oldid=17141
                  or https://ntrs.nasa.gov/api/citations/19980227091/downloads/19980227091.pdf ('Technical Note D-233, Determination of Azimuth Angle at Burnout for placing Satellite over a selected Earth position', T.H. Skopinski and K.G Johnson, NASA, 1960)
     2) Launchsite Latitudes: 'Space Mission Engineering - The New SMAD' by Wertz, Everett and Puschell, published 2011 by Microcosm Press
+
 
 """
 
@@ -159,6 +164,7 @@ function calc_az_given_latitude()
         end
     end
     az = calc_az(lat, inc, true)
+
     return az
 end
 function calc_az_given_launchsite(launchsites)
@@ -176,16 +182,7 @@ function calc_az_given_launchsite(launchsites)
     az = calc_az(lat, inc, true)
     return az
 end
-function twiny(sp::Plots.Subplot)
-    sp[:top_margin] = max(sp[:top_margin], 30Plots.px)
-    plot!(sp.plt, inset = (sp[:subplot_index], bbox(0,0,1,1)))
-    twinsp = sp.plt.subplots[end]
-    twinsp[:xaxis][:mirror] = true
-    twinsp[:background_color_inside] = RGBA{Float64}(0,0,0,0)
-    Plots.link_axes!(sp[:yaxis], twinsp[:yaxis])
-    twinsp
-end
-twiny(plt::Plots.Plot = current()) = twiny(plt[1])
+
 function calc_az(lat, inc, verbose)
     az = asind(cosd(inc) / cosd(lat))
     if inc != lat
@@ -220,31 +217,29 @@ end
 function compare_propellant_mass_with_latitude(launchsites)
     lats = launchsites.latitudes
     names = launchsites.names
-    #own_lat = parse_value(-90.0, 90.0, "latitude")
-    #v_f = parse_value(0.0, typemax(Float32), "final orbit velocity [m/s]")
-    #m = parse_value(0.0, typemax(Float32), "rocket mass [kg]")
-    #v_e = parse_value(0.0, typemax(Float32), "exhaust velocity of gases [m/s]")
-    own_lat = 0.0
+    own_lat = parse_value(-90.0, 90.0, "latitude")
+    v_f = parse_value(0.0, typemax(Float32), "final orbit velocity [m/s]")
+    m = parse_value(0.0, typemax(Float32), "rocket mass [kg]")
+    v_e = parse_value(0.0, typemax(Float32), "exhaust velocity of gases [m/s]")
+    #= own_lat = 0.0
     v_f = 3070
     m = 140800
-    v_e = 4400
+    v_e = 4400 =#
     frac = ((v_f - (2pi*R_e*cosd(own_lat))/T_s)/v_e)
     m_p=[]
-    #push!(m_p,(Float64(m) * (ℯ ^frac-1)))
-    m_p_own_lat = (Float64(m) * (ℯ ^frac-1))
-    println("The propellant mass needed for latitude ",round(own_lat,digits=precision),"° is ",round(m_p_own_lat,digits=precision),"kg")
+    push!(m_p,(Float64(m) * (ℯ ^frac-1)))
+    println("The propellant mass needed for latitude ",round(own_lat,digits=precision),"° is ",round(m_p[1],digits=precision),"kg")
     println("The propellant mass for the following launchsites will also be calculated and compared in a plot: \n", names)
     for lat in launchsites.latitudes
         frac = ((v_f - (2pi*R_e*cosd(lat))/T_s)/v_e)
         push!(m_p,(Float64(m) * (ℯ ^frac-1)))
     end
-    #pushfirst!(names, "input lat")
-    #pushfirst!(lats, 0.0)
+    pushfirst!(names, "input lat")
+    pushfirst!(lats, 0.0)
     p = plot(scatter(lats,m_p,mode="lines",title = "Propellant mass for different launchsite latitudes",label="p_m / launchsites"))
     xlabel!("Latitude [°]")
     ylabel!("Propellant mass [kg]")
-    #twiny(plt::Plots.Plot = current()) = twiny(plt[1])
-    plot!(scatter!([own_lat],[m_p_own_lat], label="p_m / given latitude",box=:on, color=:red))
+    plot!(scatter!([own_lat],[m_p[1]], label="p_m / chosen latitude",box=:on, color=:red))
     png(p,"propellant_mass_with_lat")
     display(p)
     return m_p
@@ -275,7 +270,7 @@ function choose_mode(launchsites)
     choice = parse_value(1, nr_of_modes, "selection")
     #calculate inclination for given azimuth 
     if choice == 1
-        println("The selected mode is calculation of the needed rotational Azimuth to achieve a certain inclination.")
+        println("The selected mode is calculation of the rotational Azimuth neccessary to achieve a certain inclination.")
         own_lat = latitude_or_launchsite()
         if own_lat
             calc_rotational_az_given_latitude()
@@ -283,7 +278,7 @@ function choose_mode(launchsites)
             calc_rotational_az_given_launchsite(launchsites)
         end
     elseif choice == 2
-        println("The selected mode is calculation of the launch Azimuth to achieve a certain inclination.")
+        println("The selected mode is calculation of the Azimuth neccessary to achieve a certain inclination.")
         own_lat = latitude_or_launchsite()
         if own_lat
             calc_az_given_latitude()
@@ -291,7 +286,6 @@ function choose_mode(launchsites)
             calc_az_given_launchsite(launchsites)
         end
     elseif choice == 3
-        run(`clear`)
         println("The selected mode is calculation of the resulting inclination for a given Azimuth.")
         own_lat = latitude_or_launchsite()
         if own_lat
@@ -300,7 +294,7 @@ function choose_mode(launchsites)
             calc_inc_given_launchsite(launchsites)
         end
     elseif choice == 4
-        println("The selected mode is calculation of the propellant mass needed for different latitudes.")
+        println("The selected mode is calculation of the propellant mass needed as a function of latitude")
         own_lat = latitude_or_launchsite()
         if own_lat
             compare_propellant_mass_with_latitude(launchsites)
@@ -318,8 +312,7 @@ end
 gets called at start of program. initialises launch site struct with values, prints modes and conventions on screen and calls choose_mode()
 """
 function start()
-    #Dict([("Cape Canaveral")])
-    launchsites = Launch_sites(["Cape Canaveral", "Cosmodrome","Kennedy Space Center","Kourou Launch Center/Guyana Space Centre","LP Odissey Sea Launch","Kwajalein Missile Range","Satish Dhawan Space Centre","Jiu Quan Satellite Launch Center","Vandenberg Air Force Base"], [28.5, 45.9,28.5,5.2,0.0,9.0,13.9,40.6,34.4])
+    launchsites = Launch_sites(["Cape Canaveral", "Cosmodrome","Kennedy Space Center","Kourou Launch Center/Guyana Space Centre","LP Odissey Sea Launch","Kwajalein Missile Range","Satish Dhawan Space Centre","Jiu Quan Satellite Launch Center","Vandenberg Air Force Base","Santa Maria Island, Azores"], [28.5, 45.9,28.5,5.2,0.0,9.0,13.9,40.6,34.4,37.0])
     run(`clear`)
     printstyled("LAUNCHSITE CALCULATOR\n\n", bold=true, underline=true, color=:blue)
     printstyled("Existing modes are:\n", underline=true)
