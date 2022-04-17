@@ -38,6 +38,7 @@ Additional Information:
 """
 
 using Plots
+using CSV
 "specifies the number of calculation modes that this program currently offers"
 nr_of_modes = 4
 
@@ -170,7 +171,7 @@ function calc_rotational_az(lat, inc, v)
     az_rot = atand((v * sind(az_inertial) - v_eqrot * cosd(inc)) / (v * cosd(az_inertial)))
     println("The rotational Azimuth needed to achieve the desired inclination of ",round(inc,digits=precision),"° equals ",round(az_rot,digits=precision),"°")
     diff = abs(az_inertial - az_rot)
-    println("The difference between the inertial Azimuth (",round(az_inertial,digits=precision),"°) and the rotational Azimuth (",round(az_rot,digits=precision),"°) equals",round(diff,digits=precision),"°")
+    println("The difference between the inertial Azimuth (",round(az_inertial,digits=precision),"°) and the rotational Azimuth (",round(az_rot,digits=precision),"°) equals ",round(diff,digits=precision),"°")
     return az_rot
 end
 
@@ -368,6 +369,35 @@ function compare_propellant_mass(launchsites)
     return m_p
 end
 
+#noninteractive mode
+#LATITUDE INCLINATION AZIMUTH ORBIT SPEED ROCKET MASS ESCAPE VELOCITY
+function compare_propellant_mass(launchsites, values)
+    lats = launchsites.latitudes
+    names = launchsites.names
+    m_p=[]
+    println("The propellant mass for the following launchsites will be calculated and compared in a plot: \n", names)
+
+    #input values
+    v_f = values[4]
+    m = values[5]
+    v_e = values[6]
+    
+    #calculation of m_p for launchsites
+    for lat in launchsites.latitudes
+        frac = ((v_f - (2pi*R_e*cosd(lat))/T_s)/v_e)
+        push!(m_p,(Float64(m) * (ℯ ^frac-1)))
+    end
+
+    #plotting
+    p = plot(scatter(lats,m_p,mode="lines",title = "propellant mass / latitudes (eastwards launch)",label="p_m / latitudes"))
+    xlabel!("Latitude [°]")
+    ylabel!("Propellant mass p_m [kg]")
+    png(p,"propellant_mass")
+    display(p)
+
+    return m_p
+end
+
 """
     choose_mode(launchsites)
 
@@ -416,14 +446,12 @@ function choose_mode(launchsites)
     end
 end
 
-"""
-    start()
+function read_from_csv(file)
+    values = file |> CSV.Tables.matrix
+    return values
+end
 
-gets called at start of program. initialises launch site struct with values, prints modes and conventions on screen and calls choose_mode()
-"""
-function start()
-    launchsites = Launch_sites(["Cape Canaveral", "Cosmodrome","Kennedy Space Center","Kourou Launch Center/Guyana Space Centre","LP Odissey Sea Launch","Kwajalein Missile Range","Satish Dhawan Space Centre","Jiu Quan Satellite Launch Center","Vandenberg Air Force Base","Santa Maria Island, Azores"], [28.5, 45.9,28.5,5.2,0.0,9.0,13.9,40.6,34.4,37.0])
-    run(`clear`)
+function init_interactive(launchsites)
     printstyled("LAUNCHSITE CALCULATOR\n\n", bold=true, underline=true, color=:blue)
     printstyled("Existing modes are:\n", underline=true)
     printstyled("\t1) Calculate the needed rotational Azimuth for a given latitude and inclination\n")
@@ -436,6 +464,35 @@ function start()
     printstyled("\t-Inclination and Latitude are defined from -90° to +90°, Azimuth from 0° to 360°\n")
     printstyled("\t-Velocities must be given in m/s\n")
     choose_mode(launchsites)
+end
+function init_noninteractive(launchsites, file)
+    printstyled("LAUNCHSITE CALCULATOR\n\n", bold=true, underline=true, color=:blue)
+    printstyled("The following things will be calculated and the results written to a file:\n", underline=true)
+    printstyled("\t1) Calculating necessary rotational Azimuth for a given latitude and inclination\n")
+    printstyled("\t2) Calculating necessary inertial Azimuth for a given latitude and inclination\n")
+    printstyled("\t3) Calculating resulting inclination for a given latitude and azimuth\n")
+    printstyled("\t4) Comparing propellant mass needed for different latitudes\n")
+    all_values = read_from_csv(file)
+    println(all_values[2,1])
+    calc_az(all_values[2,1],all_values[2,2],true)
+    calc_rotational_az(all_values[1,1],all_values[1,2],all_values[1,4])
+    calc_inc(all_values[3,1],all_values[3,3])
+    compare_propellant_mass(launchsites,all_values[4,:])
+end
+"""
+    start()
+
+gets called at start of program. initialises launch site struct with values, prints modes and conventions on screen and calls choose_mode()
+"""
+function start()
+    launchsites = Launch_sites(["Cape Canaveral", "Cosmodrome","Kennedy Space Center","Kourou Launch Center/Guyana Space Centre","LP Odissey Sea Launch","Kwajalein Missile Range","Satish Dhawan Space Centre","Jiu Quan Satellite Launch Center","Vandenberg Air Force Base","Santa Maria Island, Azores"], [28.5, 45.9,28.5,5.2,0.0,9.0,13.9,40.6,34.4,37.0])
+    run(`clear`)
+    try
+        file = CSV.File(open("values.csv"))
+        init_noninteractive(launchsites, file)
+    catch
+        init_interactive(launchsites)
+    end
 end
 
 start()
