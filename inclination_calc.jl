@@ -25,9 +25,10 @@ Conventions:
     3) Velocities must be given in m/s
     
 Dependencies:
-    1) The Plots package is needed to show the resulting plots. Installation can be done by typing julia into the console to start the REPL, then typing the following:
+    1) The Plots and the CSV packages are needed to show the resulting plots. Installation can be done by typing julia into the console to start the REPL, then typing the following:
         julia> using package
         julia> Pkg.add("Plots")
+        julia> Pkg.add("CSV")
 
 Sources:
     1) Formulas: The derivation of formulas for inertial and rotational calculations can be found under https://www.orbiterwiki.org/index.php?title=Launch_Azimuth&oldid=17141
@@ -54,6 +55,9 @@ R_e = 6371000
 
 "Sidereal rotational period [s]"
 T_s = 86164
+
+"Rotational velocity of Earth at equator [m/s]"
+v_eqrot = 465.10
 
 "struct used for storing names and latitudes of launch sites"
 struct Launch_sites
@@ -186,7 +190,6 @@ Prints and returns rotational Azimuth.
 """
 function calc_rotational_az(lat, inc, v)
     az_inertial = calc_az(lat, inc, false)
-    v_eqrot = 465101.0
     az_rot = atand((v * sind(az_inertial) - v_eqrot * cosd(inc)) / (v * cosd(az_inertial)))
     println("The rotational Azimuth needed to achieve the desired inclination of ",round(inc,digits=precision),"° equals ",round(az_rot,digits=precision),"°")
     diff = abs(az_inertial - az_rot)
@@ -202,13 +205,12 @@ Writes to file and returns rotational Azimuth.
 """
 function calc_rotational_az(lat, inc, v, out)
     az_inertial = calc_az(lat, inc, false)
-    v_eqrot = 465101.0
     az_rot = atand((v * sind(az_inertial) - v_eqrot * cosd(inc)) / (v * cosd(az_inertial)))
     write(out,"\nThe rotational Azimuth needed to achieve the desired inclination of ")
     show(out,round(inc,digits=precision))
-    write(out,"° equals ")
-    show(out,repr(round(az_rot,digits=precision)))
-    write(out,"degrees\n")
+    write(out," degrees equals ")
+    show(out,round(az_rot,digits=precision))
+    write(out," degrees.\n")
     diff = abs(az_inertial - az_rot)
     write(out,"The difference between the inertial Azimuth (",repr(round(az_inertial,digits=precision))," degrees) and the rotational Azimuth (",repr(round(az_rot,digits=precision))," degrees) equals ",repr(round(diff,digits=precision))," degrees\n")
     return az_rot
