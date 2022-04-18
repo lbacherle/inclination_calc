@@ -603,14 +603,14 @@ If this file does not exist, starts interactive mode by calling init_interactive
 function start()
     launchsites = Launch_sites(["Cape Canaveral", "Cosmodrome","Kennedy Space Center","Kourou Launch Center/Guyana Space Centre","LP Odissey Sea Launch","Kwajalein Missile Range","Satish Dhawan Space Centre","Jiu Quan Satellite Launch Center","Vandenberg Air Force Base","Santa Maria Island, Azores"], [28.5, 45.9,28.5,5.2,0.0,9.0,13.9,40.6,34.4,37.0])
     run(`clear`)
-    #try
+    try
         file = CSV.File(open("values.csv"))
         touch("output_values.txt")
         out = open("output_values.txt","w")
         init_noninteractive(launchsites, file,out)
-    #catch
-    #    init_interactive(launchsites)
-    #end
+    catch
+        init_interactive(launchsites)
+    end
 end
 
 start()
