@@ -370,31 +370,76 @@ function compare_propellant_mass(launchsites)
 end
 
 #noninteractive mode
-#LATITUDE INCLINATION AZIMUTH ORBIT SPEED ROCKET MASS ESCAPE VELOCITY
 function compare_propellant_mass(launchsites, values)
     lats = launchsites.latitudes
     names = launchsites.names
     m_p=[]
+    delta_mp = []
     println("The propellant mass for the following launchsites will be calculated and compared in a plot: \n", names)
-
+    pushfirst!(lats, 0)
     #input values
     v_f = values[4]
     m = values[5]
     v_e = values[6]
-    
+    frac = ((v_f - (2pi*R_e*cosd(0))/T_s)/v_e)
+    mp_0 = Float64(m) * (ℯ ^frac-1)
     #calculation of m_p for launchsites
     for lat in launchsites.latitudes
         frac = ((v_f - (2pi*R_e*cosd(lat))/T_s)/v_e)
         push!(m_p,(Float64(m) * (ℯ ^frac-1)))
+        #calculate difference between propellant mass needed at launchsite and at equator
+        push!(delta_mp,abs((Float64(m) * (ℯ ^frac-1)-mp_0)))
     end
 
     #plotting
     p = plot(scatter(lats,m_p,mode="lines",title = "propellant mass / latitudes (eastwards launch)",label="p_m / latitudes"))
     xlabel!("Latitude [°]")
     ylabel!("Propellant mass p_m [kg]")
-    png(p,"propellant_mass")
+    png(p,"propellant_mass_launchsites")
     display(p)
 
+    #plotting plot of delta m_p
+    p2 = plot(scatter(lats,delta_mp,mode="lines",title = "propellant mass / latitudes (eastwards launch)",label="Δp_m / latitudes"))
+    xlabel!("Latitude [°]")
+    ylabel!("Difference in propellant mass Δp_m [kg]")
+    png(p2,"delta_propellant_mass_launchsites")
+    display(p2)
+    return m_p
+end
+
+function compare_propellant_mass_all_latitudes(values)
+    m_p=[]
+    delta_mp = []
+    lats = []
+    println("The propellant mass for the following launchsites will be calculated and compared in a plot: \n", names)
+    
+    #input values
+    v_f = values[4]
+    m = values[5]
+    v_e = values[6]
+    frac = ((v_f - (2pi*R_e*cosd(0))/T_s)/v_e)
+    mp_0 = Float64(m) * (ℯ ^frac-1)
+    #calculation of m_p for launchsites
+    for lat in 0:90
+        push!(lats,lat)
+        frac = ((v_f - (2pi*R_e*cosd(lat))/T_s)/v_e)
+        push!(m_p,(Float64(m) * (ℯ ^frac-1)))
+        #calculate difference between propellant mass needed at launchsite and at equator
+        push!(delta_mp,abs((Float64(m) * (ℯ ^frac-1)-mp_0)))
+    end
+    #plotting
+    p = plot(lats,m_p,title = "propellant mass / latitudes (eastwards launch)",label="p_m / latitudes")
+    xlabel!("Latitude [°]")
+    ylabel!("Propellant mass p_m [kg]")
+    png(p,"propellant_mass_all_latitudes")
+    display(p)
+
+    #plotting plot of delta m_p
+    p2 = plot(lats,delta_mp,title = "propellant mass / latitudes (eastwards launch)",label="Δp_m / latitudes")
+    xlabel!("Latitude [°]")
+    ylabel!("Difference in propellant mass Δp_m [kg]")
+    png(p2,"delta_propellant_mass_all_latitudes")
+    display(p2)
     return m_p
 end
 
@@ -465,7 +510,7 @@ function init_interactive(launchsites)
     printstyled("\t-Velocities must be given in m/s\n")
     choose_mode(launchsites)
 end
-function init_noninteractive(launchsites, file)
+function init_noninteractive(launchsites, file,out)
     printstyled("LAUNCHSITE CALCULATOR\n\n", bold=true, underline=true, color=:blue)
     printstyled("The following things will be calculated and the results written to a file:\n", underline=true)
     printstyled("\t1) Calculating necessary rotational Azimuth for a given latitude and inclination\n")
@@ -478,6 +523,7 @@ function init_noninteractive(launchsites, file)
     calc_rotational_az(all_values[1,1],all_values[1,2],all_values[1,4])
     calc_inc(all_values[3,1],all_values[3,3])
     compare_propellant_mass(launchsites,all_values[4,:])
+    compare_propellant_mass_all_latitudes(all_values[4,:])
 end
 """
     start()
@@ -489,8 +535,12 @@ function start()
     run(`clear`)
     try
         file = CSV.File(open("values.csv"))
-        init_noninteractive(launchsites, file)
+        touch("output_values.txt")
+        out = open("output_values.txt")
+        init_noninteractive(launchsites, file,out)
     catch
+        touch("output_values.txt")
+        out = open("output_values.txt")
         init_interactive(launchsites)
     end
 end
