@@ -15,6 +15,10 @@ Input parameters:
     Mode 3: Latitude/Launchsite selection (-90.0° -> +90°), Azimuth (0° -> 360°)
     Mode 4: Latitude/Launchsite selection (-90.0° -> +90°), Final Orbit Velocity (0 m/s -> max(Float32)), Rocket mass (0kg -> max(Float32)), Exhaust Velocity (0 m/s -> max(Float32))
 
+Input:
+    If file called 'values.csv' in the correct format (see example values.csv) exists, reads the values from this csv and prints all output to files.
+    If this file does not exist, starts an interactive mode and allows user to freely input variables.
+
 Conventions:
     1) All angles must be given in degrees
     2) Inclination and Latitude are defined from -90° to +90°, Azimuth from 0° to 360°
@@ -138,6 +142,21 @@ function calc_inc(lat, az)
 end
 
 """
+    calc_inc(lat, az,out)
+
+Calculates the resulting inclination of the two arguments. Write to out file and returns the inclination.
+"""
+function calc_inc(lat, az,out)
+    if az <= 180
+        inc = acosd(cosd(lat) * sind(az))
+    else 
+        inc = acosd(-cosd(lat)*sind(az))
+    end
+    write(out,"The resulting inclination for the latitude ",repr(lat)," degrees and the Azimuth ", repr(az)," degrees is ",repr(round(inc,digits=precision))," degrees")
+    return inc
+end
+
+"""
     calc_inc_given_latitude()
 
 Asks user for input, sets values for latitude and azimuth, calls calc_inc with the given values.
@@ -172,6 +191,26 @@ function calc_rotational_az(lat, inc, v)
     println("The rotational Azimuth needed to achieve the desired inclination of ",round(inc,digits=precision),"° equals ",round(az_rot,digits=precision),"°")
     diff = abs(az_inertial - az_rot)
     println("The difference between the inertial Azimuth (",round(az_inertial,digits=precision),"°) and the rotational Azimuth (",round(az_rot,digits=precision),"°) equals ",round(diff,digits=precision),"°")
+    return az_rot
+end
+
+"""
+    calc_rotational_az(lat, inc, v, out)
+
+Assumes that calculation of a rotational Azimuth is possible for the passed values. Calculates inertial azimuth using calc_az and uses the result to calculate rotational azimuth.
+Writes to file and returns rotational Azimuth.
+"""
+function calc_rotational_az(lat, inc, v, out)
+    az_inertial = calc_az(lat, inc, false)
+    v_eqrot = 465101.0
+    az_rot = atand((v * sind(az_inertial) - v_eqrot * cosd(inc)) / (v * cosd(az_inertial)))
+    write(out,"\nThe rotational Azimuth needed to achieve the desired inclination of ")
+    show(out,round(inc,digits=precision))
+    write(out,"° equals ")
+    show(out,repr(round(az_rot,digits=precision)))
+    write(out,"degrees\n")
+    diff = abs(az_inertial - az_rot)
+    write(out,"The difference between the inertial Azimuth (",repr(round(az_inertial,digits=precision))," degrees) and the rotational Azimuth (",repr(round(az_rot,digits=precision))," degrees) equals ",repr(round(diff,digits=precision))," degrees\n")
     return az_rot
 end
 
@@ -272,7 +311,7 @@ function calc_az_given_latitude()
 end
 
 """
-    calc_az_given_launchsite()
+    calc_az_given_launchsite(launchsites)
 
 Asks user for input on and sets values for launchsite and inclination, calls calc_az with the given values.
 """
@@ -369,7 +408,15 @@ function compare_propellant_mass(launchsites)
     return m_p
 end
 
-#noninteractive mode
+"""
+    compare_propellant_mass(launchsites, values)
+
+Noninteractive version of compare_propellant_mass.
+Gets from values the following: final orbit velocity, rocket mass and exhaust velocity. For every launchsite in launchsites, calculates the propellant mass neccessary to achieve the desired orbit velocity.
+Also calculates the difference in necessary propellant mass for every launchsite compared to the minimum propellant mass needed at equator.
+Plots the results and saves the plot to a file to facilitate comparison.
+Returns an array containing the propellant mass for every launchsite.
+"""
 function compare_propellant_mass(launchsites, values)
     lats = launchsites.latitudes
     names = launchsites.names
@@ -407,12 +454,18 @@ function compare_propellant_mass(launchsites, values)
     return m_p
 end
 
+"""
+    compare_propellant_mass_all_latitudes(values)
+
+Gets from values the following: final orbit velocity, rocket mass and exhaust velocity. For every latitude from 0° to 90°, calculates the propellant mass neccessary to achieve the desired orbit velocity.
+Also calculates the difference in necessary propellant mass for every launchsite compared to the minimum propellant mass needed at equator.
+Plots the results and saves the plot to a file to facilitate comparison.
+Returns an array containing the propellant mass for every latitude.
+"""
 function compare_propellant_mass_all_latitudes(values)
     m_p=[]
     delta_mp = []
     lats = []
-    println("The propellant mass for the following launchsites will be calculated and compared in a plot: \n", names)
-    
     #input values
     v_f = values[4]
     m = values[5]
@@ -491,6 +544,11 @@ function choose_mode(launchsites)
     end
 end
 
+"""
+    read_from_csv(file)
+
+Reads values from a csv and converts them to a matrix. Returns the matrix.
+"""
 function read_from_csv(file)
     values = file |> CSV.Tables.matrix
     return values
@@ -510,7 +568,16 @@ function init_interactive(launchsites)
     printstyled("\t-Velocities must be given in m/s\n")
     choose_mode(launchsites)
 end
-function init_noninteractive(launchsites, file,out)
+
+"""
+    init_noninteractive(launchsites, file, out)
+
+Initialises values for noninteractive mode by reading them from file.
+Calls all functions to calculate the 4 modes.
+Closes files.
+"""
+function init_noninteractive(launchsites, file, out)
+    write(out,"LAUNCHSITE CALCULATOR\n\n")
     printstyled("LAUNCHSITE CALCULATOR\n\n", bold=true, underline=true, color=:blue)
     printstyled("The following things will be calculated and the results written to a file:\n", underline=true)
     printstyled("\t1) Calculating necessary rotational Azimuth for a given latitude and inclination\n")
@@ -518,31 +585,31 @@ function init_noninteractive(launchsites, file,out)
     printstyled("\t3) Calculating resulting inclination for a given latitude and azimuth\n")
     printstyled("\t4) Comparing propellant mass needed for different latitudes\n")
     all_values = read_from_csv(file)
-    println(all_values[2,1])
     calc_az(all_values[2,1],all_values[2,2],true)
-    calc_rotational_az(all_values[1,1],all_values[1,2],all_values[1,4])
-    calc_inc(all_values[3,1],all_values[3,3])
+    calc_rotational_az(all_values[1,1],all_values[1,2],all_values[1,4],out)
+    calc_inc(all_values[3,1],all_values[3,3],out)
     compare_propellant_mass(launchsites,all_values[4,:])
     compare_propellant_mass_all_latitudes(all_values[4,:])
+    close(out)
 end
 """
     start()
 
-gets called at start of program. initialises launch site struct with values, prints modes and conventions on screen and calls choose_mode()
+gets called at start of program. Initialises launch site struct with values.
+Tries to find and open a file called values.csv. If this file exists, generates an output file and starts noninteractive mode by calling init_noninteractive.
+If this file does not exist, starts interactive mode by calling init_interactive().
 """
 function start()
     launchsites = Launch_sites(["Cape Canaveral", "Cosmodrome","Kennedy Space Center","Kourou Launch Center/Guyana Space Centre","LP Odissey Sea Launch","Kwajalein Missile Range","Satish Dhawan Space Centre","Jiu Quan Satellite Launch Center","Vandenberg Air Force Base","Santa Maria Island, Azores"], [28.5, 45.9,28.5,5.2,0.0,9.0,13.9,40.6,34.4,37.0])
     run(`clear`)
-    try
+    #try
         file = CSV.File(open("values.csv"))
         touch("output_values.txt")
-        out = open("output_values.txt")
+        out = open("output_values.txt","w")
         init_noninteractive(launchsites, file,out)
-    catch
-        touch("output_values.txt")
-        out = open("output_values.txt")
-        init_interactive(launchsites)
-    end
+    #catch
+    #    init_interactive(launchsites)
+    #end
 end
 
 start()
