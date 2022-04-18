@@ -459,7 +459,7 @@ end
 
 Gets from values the following: final orbit velocity, rocket mass and exhaust velocity. For every latitude from 0° to 90°, calculates the propellant mass neccessary to achieve the desired orbit velocity.
 Also calculates the difference in necessary propellant mass for every launchsite compared to the minimum propellant mass needed at equator.
-Plots the results and saves the plot to a file to facilitate comparison.
+Plots the results and saves plot to a file to facilitate comparison.
 Returns an array containing the propellant mass for every latitude.
 """
 function compare_propellant_mass_all_latitudes(values)
@@ -480,6 +480,7 @@ function compare_propellant_mass_all_latitudes(values)
         #calculate difference between propellant mass needed at launchsite and at equator
         push!(delta_mp,abs((Float64(m) * (ℯ ^frac-1)-mp_0)))
     end
+
     #plotting
     p = plot(lats,m_p,title = "propellant mass / latitudes (eastwards launch)",label="p_m / latitudes")
     xlabel!("Latitude [°]")
