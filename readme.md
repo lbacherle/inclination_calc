@@ -13,8 +13,8 @@ Conventions:\
 &emsp;2) Inclination and Latitude are defined from -90° to +90°, Azimuth from 0° to 360°
 
 Input:\
-&emsp;If file called 'values.csv' in the correct format (see example values.csv) exists, reads the values from this csv and prints all output to files.\
-&emsp;If this file does not exist, starts an interactive mode and allows user to freely input variables.
+&emsp;-If file called 'values.csv' in the correct format (see example values.csv) exists, reads the values from this csv and prints all output to files.\
+&emsp;-If this file does not exist, starts an interactive mode and allows user to freely input variables.
 
 Dependencies:\
 &emsp;1) The Plots package is needed to show the resulting plots. Installation can be done by typing julia into the command line to start the REPL, then typing the following:\
