@@ -13,7 +13,7 @@ Conventions:\
 &emsp;2) Inclination and Latitude are defined from -90° to +90°, Azimuth from 0° to 360°
 
 Input:\
-&emsp;-If file called 'values.csv' in the correct format (see example values.csv) exists, reads the values from this csv and prints all output to files. Values that are not needed for a given mode should be set to 0.0 in this file.\
+&emsp;-If file called 'values.csv' in the correct format (see example values.csv) exists, reads the values from this csv and prints all output to files. Values that are not needed for a given mode should be set to 0.0.\
 &emsp;-If this file does not exist, starts an interactive mode and allows user to freely input variables.
 
 Dependencies:\
