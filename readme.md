@@ -17,9 +17,10 @@ Input:\
 &emsp;-If this file does not exist, starts an interactive mode and allows user to freely input variables.
 
 Dependencies:\
-&emsp;1) The Plots package is needed to show the resulting plots. Installation can be done by typing julia into the command line to start the REPL, then typing the following:\
+&emsp;1) The Plots and the CSV packages are needed to show the resulting plots. Installation can be done by typing julia into the command line to start the REPL, then typing the following:\
 &emsp;&emsp;julia> using package\
 &emsp;&emsp;julia> Pkg.add("Plots")
+&emsp;&emsp;julia> Pkg.add("CSV")
 
 Sources:\
 &emsp;1) Formulas: The derivation of formulas for inertial and rotational calculations can be found under https://www.orbiterwiki.org/index.php?title=Launch_Azimuth&oldid=17141
